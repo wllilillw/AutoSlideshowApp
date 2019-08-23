@@ -21,22 +21,20 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
-
-            // Android 6.0以降の場合
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // パーミッションの許可状態を確認する
-                if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                    // 許可されている
-                    getContentsInfo()
-                } else {
-                    // 許可されていないので許可ダイアログを表示する
-                    requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), PERMISSIONS_REQUEST_CODE)
-                }
-                // Android 5系以下の場合
-            } else {
+        // Android 6.0以降の場合
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // パーミッションの許可状態を確認する
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                // 許可されている
                 getContentsInfo()
+            } else {
+                // 許可されていないので許可ダイアログを表示する
+                requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), PERMISSIONS_REQUEST_CODE)
             }
-
+            // Android 5系以下の場合
+        } else {
+            getContentsInfo()
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -47,6 +45,7 @@ class MainActivity : AppCompatActivity() {
                 }
         }
     }
+
     private fun getContentsInfo() {
         // 画像の情報を取得する
         val resolver = contentResolver
@@ -57,6 +56,7 @@ class MainActivity : AppCompatActivity() {
             null, // フィルタ用パラメータ
             null // ソート (null ソートなし)
         )
+
         if (cursor.moveToFirst()) {
             // indexからIDを取得し、そのIDから画像のURIを取得する
             val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
@@ -65,7 +65,22 @@ class MainActivity : AppCompatActivity() {
 
             imageView.setImageURI(imageUri)
         }
+        if (cursor.moveToNext()) {
+            // indexからIDを取得し、そのIDから画像のURIを取得する
+            val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
+            val id = cursor.getLong(fieldIndex)
+            val imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
+            imageView.setImageURI(imageUri)
+        }
+        if (cursor.moveToPrevious()) {
+            // indexからIDを取得し、そのIDから画像のURIを取得する
+            val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
+            val id = cursor.getLong(fieldIndex)
+            val imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+
+            imageView.setImageURI(imageUri)
+        }
         if (cursor.moveToLast()) {
             // indexからIDを取得し、そのIDから画像のURIを取得する
             val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
@@ -74,35 +89,21 @@ class MainActivity : AppCompatActivity() {
 
             imageView.setImageURI(imageUri)
         }
-
-        buttonForward.setOnClickListener(){
-
+        buttonForward.setOnClickListener() {
             cursor.moveToNext()
-            val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
-            val id = cursor.getLong(fieldIndex)
-            val imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-                imageView.setImageURI(imageUri)
-
-            if(!cursor.moveToNext()){
+            if (!cursor.moveToNext()) {
                 cursor.moveToFirst()
             }
-
         }
-
-        buttonBack.setOnClickListener(){
-
+        buttonBack.setOnClickListener() {
             cursor.moveToPrevious()
-            val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
-            val id = cursor.getLong(fieldIndex)
-            val imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-            imageView.setImageURI(imageUri)
-            if(!cursor.moveToPrevious()){
+            if (!cursor.moveToPrevious()) {
                 cursor.moveToLast()
             }
         }
 
-
+        cursor.close()
     }
+
+
 }
