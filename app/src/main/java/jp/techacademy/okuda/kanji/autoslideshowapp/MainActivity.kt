@@ -11,12 +11,21 @@ import android.content.pm.PackageManager
 import android.provider.MediaStore
 import android.content.ContentUris
 import android.database.Cursor
+import android.os.Handler
 import android.view.View
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
     private val PERMISSIONS_REQUEST_CODE = 100
-    //private var cursor;
+    //private var cursor = null
+    private var mTimer: Timer? = null
+
+    // タイマー用の時間のための変数
+    private var mTimerSec = 0.0
+
+    private var mHandler = Handler()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,13 +102,39 @@ class MainActivity : AppCompatActivity() {
             imageView.setImageURI(imageUri)
         }
 
-        button.setOnClickListener(){
+        button.setOnClickListener(){if (mTimer == null){
+            button.setText("停止")
+            mTimer = Timer()
+            mTimer!!.schedule(object : TimerTask() {
+                override fun run() {
+                    mTimerSec += 0.1
+                    mHandler.post {
+                        cursor.moveToNext()
+                        if (!cursor!!.moveToNext()) {
+                            cursor!!.moveToFirst()
+                        }
 
-            
+                        // indexからIDを取得し、そのIDから画像のURIを取得する
+                        val fieldIndex = cursor!!.getColumnIndex(MediaStore.Images.Media._ID)
+                        val id = cursor!!.getLong(fieldIndex)
+                        val imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+
+                        imageView.setImageURI(imageUri)
+                    }
+                }
+            }, 2000, 2000) // 最初に始動させるまで 100ミリ秒、ループの間隔を 100ミリ秒 に設定
+        }
+            else{
+            button.setText("再生")
+            mTimer = null
+
+            cursor.close()
+        }
+
         }
     }
 
- /*   override fun onDestroy() {
+   /* override fun onDestroy() {
         super.onDestroy()
         cursor!!.close()
     }*/
